@@ -1,0 +1,43 @@
+#! /bin/bash --noprofile
+
+# Script to rm files safely
+
+# Originally thought and created by Alexey Atramentov
+
+# Improved by Edgar Carrera 2007-07-05
+# It is now possible to rm any file from anywhere,
+# it will make a mytrash directory in the area from
+# where the file is gonna be removed, and it will
+# move the file in there with a time stamp
+
+
+
+
+for infile in $* ; do
+    if [ -e $infile ]; then
+
+        dirfile=`dirname ${infile}`
+
+        # Create a mytrash directory in the area the file is gonna
+        # be moved from
+        if [ -d ${dirfile}/mytrash ]; then
+            echo "${dirfile}/mytrash directory exists...."
+        else
+            mkdir ${dirfile}/mytrash
+            echo "${dirfile}/mytrash directory has been created...."
+        fi            
+
+
+        # Move file to mytrash directory
+        barefile=`basename ${infile}`
+        mv ${infile} ${dirfile}/mytrash/${barefile}.removed_at_`date +%Y:%m:%d:%I:%M:%S`
+        echo "File ${infile} moved to ${dirfile}/mytrash/${barefile}.removed_at_`date +%Y:%m:%d:%I:%M:%S`"
+        echo "Size of ${dirfile}/mytrash = `du -sh ${dirfile}/mytrash/.|awk '{print $1}'`"
+     else
+        echo "File $infile doesn't exist, no action has been taken..."
+     fi
+done
+
+
+
+

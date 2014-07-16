@@ -1,0 +1,400 @@
+#!/usr/bin/env python
+############################################################################
+#
+# Author: Edgar Carrera
+# March, 2013
+############################################################################
+
+"""
+   usage: %prog [options]
+   -a, --all : Sych everything, i.e, laptop Documents to main hard drive, laptop directories  to main hard drive, and then hard drive folders to backup hard drive
+   -d, --docs : Sych laptop Documents folder to main hard drive
+   -l, --laptop : Synch laptop directories to main hard drive
+   -b, --backup : Synch main hard drive to backup hard drive
+   -n, --dry : Make a dry run
+      
+"""
+
+
+import os,sys
+import subprocess
+import string, re
+import fileinput
+import commands
+import collections
+from time import gmtime, localtime, strftime
+
+#flag to debug
+DEBUG = True
+printConfig = False
+
+#path for user main area
+myhome = '/home/ecarrera/'
+#path for the user's Documents folder
+myDocuments = '/home/ecarrera/Documents'
+#path where the hard drives are mounted
+mymedia = '/media/'
+
+#names of hard drives I use
+hard_drives = [
+    "mydata", #main hard drive
+    "myiomega", #backup hard drive
+    ]
+
+#directory where the old Documents and current
+#documens are in the hard drives
+momDir_Documents = "various"
+
+
+#list of directories to synch from laptop
+#to main hard drive
+dirs_laptop_hardrive = [
+    "grive",
+    "outreach_ciencia_EdgarCarrera",
+    "presentations",
+    "publications",
+    "teaching"
+    ]
+
+#list of directories to synch MANUALLY from
+#main hard drive to backup hard drive
+dirs_manual = [
+    "music",
+    "pictures",
+    "videos"
+    ]
+
+#list of directories to synch from
+#main hard drive to backup hard drive
+dirs_hardrive_backup = [
+    "audiobooks",
+    "grive",
+    "music",
+    "outreach_ciencia_EdgarCarrera",
+    "pictures",
+    "presentations",
+    "publications",
+    "teaching",
+    "various",
+    ]
+
+
+
+
+
+# _____________________OPTIONS_______________________________________________
+
+############################################################################
+# Code taken from http://code.activestate.com/recipes/278844/
+############################################################################
+import optparse
+USAGE = re.compile(r'(?s)\s*usage: (.*?)(\n[ \t]*\n|$)')
+def nonzero(self): # will become the nonzero method of optparse.Values
+    "True if options were given"
+    for v in self.__dict__.itervalues():
+        if v is not None: return True
+    return False
+
+optparse.Values.__nonzero__ = nonzero # dynamically fix optparse.Values
+
+class ParsingError(Exception): pass
+
+optionstring=""
+
+def exit(msg=""):
+    raise SystemExit(msg or optionstring.replace("%prog",sys.argv[0]))
+
+def parse(docstring, arglist=None):
+    global optionstring
+    optionstring = docstring
+    match = USAGE.search(optionstring)
+    if not match: raise ParsingError("Cannot find the option string")
+    optlines = match.group(1).splitlines()
+    try:
+        p = optparse.OptionParser(optlines[0])
+        for line in optlines[1:]:
+            opt, help=line.split(':')[:2]
+            short,long=opt.split(',')[:2]
+            if '=' in opt:
+                action='store'
+                long=long.split('=')[0]
+            else:
+                action='store_true'
+            p.add_option(short.strip(),long.strip(),
+                         action = action, help = help.strip())
+    except (IndexError,ValueError):
+        raise ParsingError("Cannot parse the option string correctly")
+    return p.parse_args(arglist)
+
+
+#_________________________________________________________________________
+
+#######################################################
+def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
+#######################################################
+    print "\nHard drive space report:"
+
+    bef = before_sizes
+    aft = after_sizes
+    
+    if drives_mounted[hard_drives[0]]:
+        print "****** "+hard_drives[0]+" ******"
+        for info in bef[hard_drives[0]]:
+            if info == "Use%":
+                print info+":\t"+str(bef[hard_drives[0]][info])+"% --> "+str(aft[hard_drives[0]][info])+"%"
+            else:
+                print info+":\t"+str(bef[hard_drives[0]][info])+"G --> "+str(aft[hard_drives[0]][info])+"G"
+
+
+    if drives_mounted[hard_drives[1]]:
+        print "****** "+hard_drives[1]+" ******"
+        for info in bef[hard_drives[1]]:
+            if info == "Use%":
+                print info+":\t"+str(bef[hard_drives[1]][info])+"% --> "+str(aft[hard_drives[1]][info])+"%"
+            else:
+                print info+":\t"+str(bef[hard_drives[1]][info])+"G --> "+str(aft[hard_drives[1]][info])+"G"
+
+                
+            
+
+    
+
+
+
+#######################################################
+def synch_docs_to_main(isDry):
+#######################################################
+    print "\nSynching '"+myDocuments+"' folder to the '"+hard_drives[0]+"' main hard drive at the folder '"+momDir_Documents+"'"
+    do_docs_to_main = "rsync -uv -r "+isDry+" --links --delete "+myDocuments+" "+mymedia+hard_drives[0]+"/"+momDir_Documents+"/."
+    print do_docs_to_main
+    os.system(do_docs_to_main)
+
+
+    
+#######################################################
+def synch_laptop_to_main(isDry):
+#######################################################
+    print "\nSynching folders: "
+    for i in dirs_laptop_hardrive:
+        print i
+
+    print "at "+myhome+" to the main hard drive '"+hard_drives[0]+"'\n"
+
+    for carpeta in dirs_laptop_hardrive:
+        do_laptop_to_main = "rsync -uv -r "+isDry+" --links --delete "+myhome+carpeta+" "+mymedia+hard_drives[0]+"/."
+        print do_laptop_to_main
+        os.system(do_laptop_to_main)
+
+
+#######################################################
+def synch_main_to_backup(isDry):
+#######################################################
+    print "\nSynching folders "
+    for j in dirs_hardrive_backup:
+        print j
+
+    print "at the '"+hard_drives[0]+"' main hard drive to the '"+hard_drives[1]+"' backup hard drive\n"
+
+    for carpeta in dirs_hardrive_backup:
+        do_main_to_backup = "rsync -uv -r "+isDry+" --links --delete "+mymedia+hard_drives[0]+"/"+carpeta+" "+mymedia+hard_drives[1]+"/."
+        print do_main_to_backup
+        os.system(do_main_to_backup)
+
+
+#######################################################
+def synch_hard_drives(dicOpt):
+#######################################################
+    print "\nSynching ..."
+
+    isDry = dicOpt['dry']
+
+    if (dicOpt['all']):
+        synch_docs_to_main(isDry)
+        synch_laptop_to_main(isDry)
+        synch_main_to_backup(isDry)
+    else:
+        if (dicOpt['docs']):
+            synch_docs_to_main(isDry)
+        if (dicOpt['laptop']):
+            synch_laptop_to_main(isDry)
+        if (dicOpt['backup']):
+            synch_main_to_backup(isDry)
+
+#######################################################
+def get_hard_drive_sizes(drives_mounted, sizes):
+#######################################################
+    print "\nCalculating hard drive sizes ..."
+
+    if drives_mounted[hard_drives[0]]:
+        awkIdx = 2
+        for info in sizes[hard_drives[0]]:
+            str_grep = "df -h |grep "+hard_drives[0]+"|awk '{print $"+str(awkIdx)+"}'"
+            mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
+            sizes[hard_drives[0]][info] = int(mypipe.communicate()[0].split("G")[0].split("%")[0])
+            awkIdx = awkIdx + 1
+            
+    
+
+    if drives_mounted[hard_drives[1]]:
+        awkIdx = 2
+        for info in sizes[hard_drives[1]]:
+            str_grep = "df -h |grep "+hard_drives[1]+"|awk '{print $"+str(awkIdx)+"}'"
+            mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
+            sizes[hard_drives[1]][info] = int(mypipe.communicate()[0].split("G")[0].split("%")[0])
+            awkIdx = awkIdx + 1
+    
+
+
+#######################################################
+def check_hard_drives(drives_mounted):
+#######################################################
+    print "\nChecking which hard drives are mounted ..."
+
+    drives_mounted[hard_drives[0]]=os.path.exists(mymedia+hard_drives[0])
+    drives_mounted[hard_drives[1]]=os.path.exists(mymedia+hard_drives[1])
+
+    #report what was found and complain if
+    #the hard drives mounted are not enough
+    if drives_mounted[hard_drives[0]]:
+        print "Main hard drive '"+hard_drives[0]+"' found ..."
+    else:
+        print "The main hard drive '"+hard_drives[0]+"' was not found and it is always needed.  Quiting....\n"
+        exit()
+        
+    if drives_mounted[hard_drives[1]]:
+        print "Backup hard drive '"+hard_drives[1]+"' found ..."
+    else:
+        print "WARNING: Backup hard drive '"+hard_drives[1]+"' was not found. Certain operations won't be possible"
+
+#######################################################
+def check_options_consistency(dicOpt,drives_mounted):         
+######################################################
+    print "\nCheckin the consistency of the options chosen ..."
+
+    #check for the all option
+    if dicOpt['all']:
+        print "The 'all' option has been chosen (it overrides the rest!)"
+        if not (drives_mounted[hard_drives[0]] and drives_mounted[hard_drives[1]]):
+            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            exit()
+
+    #check for the doc option
+    if dicOpt['docs']:
+        print "The 'docs' option has been chosen"
+        if not (drives_mounted[hard_drives[0]]):
+            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            exit()
+
+    #check for the laptop option
+    if dicOpt['laptop']:
+        print "The 'laptop' option has been chosen"
+        if not (drives_mounted[hard_drives[0]]):
+            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            exit()
+
+    #check for the backup option
+    if dicOpt['backup']:
+        print "The 'backup' option has been chosen"
+        if not (drives_mounted[hard_drives[0]] and drives_mounted[hard_drives[1]]):
+            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            exit()
+
+    #make a comment about the dry run
+    if dicOpt['dry'] == "-n":
+        print "The 'dry' option has been chosen"
+
+    
+#######################################################
+def get_default_options(option):
+#######################################################
+    dicOpt = {}
+
+    # switch on or off dry-run
+    if not option.dry:
+        dicOpt['dry'] = ""
+    else:
+        dicOpt['dry'] = "-n"
+
+    #check if "all" tasks are requested
+    if not option.all:
+        dicOpt['all'] = False
+    else:
+        dicOpt['all'] = True
+
+    #check if "docs" task is requested
+    if not option.docs:
+        dicOpt['docs'] = False
+    else:
+        dicOpt['docs'] = True
+
+    #check if "laptop" task is requested
+    if not option.laptop:
+        dicOpt['laptop'] = False
+    else:
+        dicOpt['laptop'] = True
+
+    #check if "backup" task is requested
+    if not option.backup:
+        dicOpt['backup'] = False
+    else:
+        dicOpt['backup'] = True
+
+        
+    return dicOpt
+
+
+
+
+#######################################################
+if __name__ =='__main__':
+#######################################################
+
+    #check which hard drives are present
+    drives_mounted = {hard_drives[0]:False,
+                      hard_drives[1]:False}
+    check_hard_drives(drives_mounted)
+
+    #nested containers for the hard drive sizes before
+    #and after the synch
+    before_sizes = {hard_drives[0]:collections.OrderedDict([('Size',0), ('Used',0), ('Availb',0), ('Use%', 0)]),hard_drives[1]:collections.OrderedDict([('Size',0), ('Used',0), ('Availb',0), ('Use%', 0)])}
+    after_sizes = {hard_drives[0]:collections.OrderedDict([('Size',0), ('Used',0), ('Availb',0), ('Use%', 0)]),hard_drives[1]:collections.OrderedDict([('Size',0), ('Used',0), ('Availb',0), ('Use%', 0)])}
+
+    
+    #get original hard drive sizes
+    get_hard_drive_sizes(drives_mounted,before_sizes)
+    
+
+    #import optionparser
+    option,args = parse(__doc__)
+    if not args and not option:
+        exit()
+
+
+    #print args[1]
+
+    #set default options
+    dicOpt = get_default_options(option)
+    if (printConfig):
+        for k in dicOpt:
+            print str(k)+" = "+str(dicOpt[k])
+
+
+            
+    #check the consistency of the options with
+    #the presence of hard drives
+    check_options_consistency(dicOpt,drives_mounted)
+
+    
+    #synch
+    synch_hard_drives(dicOpt)
+    
+
+    #get the final hard drive sizes
+    get_hard_drive_sizes(drives_mounted,after_sizes)
+    
+
+    #report on the hard drive sizes
+    report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes)
+    
+    
+    
