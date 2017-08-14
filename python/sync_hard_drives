@@ -38,7 +38,7 @@ mymedia = '/media/ecarrera/'
 #names of hard drives I use
 hard_drives = [
     "myoyen", #main hard drive
-    "mydata", #backup hard drive
+    "mymovies", #backup hard drive
     ]
 
 #directory where the old Documents and current
