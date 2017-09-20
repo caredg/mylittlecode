@@ -169,6 +169,7 @@ def get_the_toupload_dictionary(inspDict,hubiDict):
             titleRatios = compare_publication_titles(inspDict[thekey],hubiDict)
             if (not len(titleRatios)==1):
                 toUploadDict[thekey]=inspDict[thekey]
+                print "....sorry, the title was NOT FOUND."
             else:
                 print "Title "+inspDict[thekey]['title']+" WAS FOUND!!!"
         else:
@@ -464,14 +465,14 @@ if __name__ =='__main__':
         cvs_up_title = 'toupload_publications.csv'
 
     #get the cvs files
+    print "------- Getting the most current USFQ HUBI publications ..."
+    hubiDict = get_hubi_publication_dictionary()
+    print_csv_file(hubiDict, "hubi_publications.csv")
+    
     print "------- Getting the requested inspire publications ..."
     inspDict = get_inspire_publication_dictionary(dicOpt)
     print_csv_file(inspDict,cvs_insp_title)
     
-    print "------- Getting the most current USFQ HUBI publications ..."
-    hubiDict = get_hubi_publication_dictionary()
-    print_csv_file(hubiDict, "hubi_publications.csv")
-
-    print "------- Comparing databases ..."
+    print "------- Comparing databases and printing results ..."
     upDict = get_the_toupload_dictionary(inspDict,hubiDict)
     print_csv_file(upDict, cvs_up_title)
