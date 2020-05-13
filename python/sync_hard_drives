@@ -3,12 +3,16 @@
 #
 # Author: Edgar Carrera
 # March, 2013
+#
+# 13 May 2020: I removed the only Docs option and move the folder to
+# the main area in disks (useful but heavy stuff got moved to a folder that
+# can be uploaded to USFQ cloud).  Plus, I put the HD sizes in usual metrics
+# for fine granularity.
 ############################################################################
 
 """
    usage: %prog [options]
    -a, --all : Sych everything, i.e, laptop Documents to main hard drive, laptop directories  to main hard drive, and then hard drive folders to backup hard drive
-   -d, --docs : Sych laptop Documents folder to main hard drive
    -l, --laptop : Synch laptop directories to main hard drive
    -b, --backup : Synch main hard drive to backup hard drive
    -n, --dry : Make a dry run
@@ -43,41 +47,35 @@ hard_drives = [
 
 #directory where the old Documents and current
 #documens are in the hard drives
-momDir_Documents = "various"
+#momDir_Documents = "various"
 
 
 #list of directories to synch from laptop
-#to main hard drive
+#to main hard drive 
 dirs_laptop_hardrive = [
+    "Documents",
     "grive",
-    "outreach_ciencia_EdgarCarrera",
     "presentations",
     "publications",
     "teaching"
-    ]
-
-#list of directories to synch MANUALLY from
-#main hard drive to backup hard drive
-dirs_manual = [
-    "music",
-    "pictures",
-    "other_pictures",
-    "videos"
     ]
 
 #list of directories to synch from
 #main hard drive to backup hard drive
 dirs_hardrive_backup = [
     "audiobooks",
+    "Documents",
     "grive",
+    "incloud_nolaptop_old_presentations",
+    "incloud_nolaptop_old_teaching",
     "music",
+    "old_academic_files",
+    "other_pictures",
     "outreach_ciencia_EdgarCarrera",
     "pictures",
-    "other_pictures",
     "presentations",
     "publications",
     "teaching",
-    "various",
     ]
 
 
@@ -145,7 +143,7 @@ def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
             if info == "Use%":
                 print info+":\t"+str(bef[hard_drives[0]][info])+"% --> "+str(aft[hard_drives[0]][info])+"%"
             else:
-                print info+":\t"+str(bef[hard_drives[0]][info])+"G --> "+str(aft[hard_drives[0]][info])+"G"
+                print info+":\t"+str(bef[hard_drives[0]][info])+" --> "+str(aft[hard_drives[0]][info])
 
 
     if drives_mounted[hard_drives[1]]:
@@ -154,7 +152,7 @@ def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
             if info == "Use%":
                 print info+":\t"+str(bef[hard_drives[1]][info])+"% --> "+str(aft[hard_drives[1]][info])+"%"
             else:
-                print info+":\t"+str(bef[hard_drives[1]][info])+"G --> "+str(aft[hard_drives[1]][info])+"G"
+                print info+":\t"+str(bef[hard_drives[1]][info])+" --> "+str(aft[hard_drives[1]][info])
 
                 
             
@@ -164,12 +162,12 @@ def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
 
 
 #######################################################
-def synch_docs_to_main(isDry):
+#def synch_docs_to_main(isDry):
 #######################################################
-    print "\nSynching '"+myDocuments+"' folder to the '"+hard_drives[0]+"' main hard drive at the folder '"+momDir_Documents+"'"
-    do_docs_to_main = "rsync -uv -r "+isDry+" --links --delete "+myDocuments+" "+mymedia+hard_drives[0]+"/"+momDir_Documents+"/."
-    print do_docs_to_main
-    os.system(do_docs_to_main)
+#    print "\nSynching '"+myDocuments+"' folder to the '"+hard_drives[0]+"' main hard drive at the folder '"+momDir_Documents+"'"
+#    do_docs_to_main = "rsync -uv -r "+isDry+" --links --delete "+myDocuments+" "+mymedia+hard_drives[0]+"/"+momDir_Documents+"/."
+#    print do_docs_to_main
+#    os.system(do_docs_to_main)
 
 
     
@@ -211,12 +209,12 @@ def synch_hard_drives(dicOpt):
     isDry = dicOpt['dry']
 
     if (dicOpt['all']):
-        synch_docs_to_main(isDry)
+    #    synch_docs_to_main(isDry)
         synch_laptop_to_main(isDry)
         synch_main_to_backup(isDry)
     else:
-        if (dicOpt['docs']):
-            synch_docs_to_main(isDry)
+#        if (dicOpt['docs']):
+#            synch_docs_to_main(isDry)
         if (dicOpt['laptop']):
             synch_laptop_to_main(isDry)
         if (dicOpt['backup']):
@@ -230,9 +228,9 @@ def get_hard_drive_sizes(drives_mounted, sizes):
     if drives_mounted[hard_drives[0]]:
         awkIdx = 2
         for info in sizes[hard_drives[0]]:
-            str_grep = "df -h |grep "+hard_drives[0]+"|awk '{print $"+str(awkIdx)+"}'"
+            str_grep = "df  |grep "+hard_drives[0]+"|awk '{print $"+str(awkIdx)+"}'"
             mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
-            sizes[hard_drives[0]][info] = int(mypipe.communicate()[0].split("G")[0].split("%")[0])
+            sizes[hard_drives[0]][info] = int(mypipe.communicate()[0].split(" ")[0].split("%")[0])
             awkIdx = awkIdx + 1
             
     
@@ -240,9 +238,9 @@ def get_hard_drive_sizes(drives_mounted, sizes):
     if drives_mounted[hard_drives[1]]:
         awkIdx = 2
         for info in sizes[hard_drives[1]]:
-            str_grep = "df -h |grep "+hard_drives[1]+"|awk '{print $"+str(awkIdx)+"}'"
+            str_grep = "df  |grep "+hard_drives[1]+"|awk '{print $"+str(awkIdx)+"}'"
             mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
-            sizes[hard_drives[1]][info] = int(mypipe.communicate()[0].split("G")[0].split("%")[0])
+            sizes[hard_drives[1]][info] = int(mypipe.communicate()[0].split(" ")[0].split("%")[0])
             awkIdx = awkIdx + 1
     
 
@@ -281,11 +279,11 @@ def check_options_consistency(dicOpt,drives_mounted):
             exit()
 
     #check for the doc option
-    if dicOpt['docs']:
-        print "The 'docs' option has been chosen"
-        if not (drives_mounted[hard_drives[0]]):
-            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
-            exit()
+#    if dicOpt['docs']:
+#        print "The 'docs' option has been chosen"
+#        if not (drives_mounted[hard_drives[0]]):
+#            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+#            exit()
 
     #check for the laptop option
     if dicOpt['laptop']:
@@ -324,10 +322,10 @@ def get_default_options(option):
         dicOpt['all'] = True
 
     #check if "docs" task is requested
-    if not option.docs:
-        dicOpt['docs'] = False
-    else:
-        dicOpt['docs'] = True
+#    if not option.docs:
+#        dicOpt['docs'] = False
+#    else:
+#        dicOpt['docs'] = True
 
     #check if "laptop" task is requested
     if not option.laptop:

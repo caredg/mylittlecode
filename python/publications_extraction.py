@@ -307,9 +307,9 @@ def get_hubi_publication_dictionary():
 #######################################################
 
      #create a phantom webdriver
-     driver = webdriver.PhantomJS()
-     #driver = webdriver.Chrome()
-     #driver.set_window_size(1120, 550)
+     #driver = webdriver.PhantomJS()
+     driver = webdriver.Chrome('/usr/bin/chromedriver')
+#     driver.set_window_size(1120, 550)
 
      #sign in hubi
      driver.get(indexPageURL)
