@@ -8,6 +8,14 @@
 # Script to extract a publication list from hep inspire,
 # compare it to hubi (usfq) and generate a list
 # of already uploaded publications and publication pending upload
+#
+# May 31, 2020
+# Inspire already switch to a new site
+# Now the robot needs work to make inspire list automatic
+# For now, then, you can make it run after saving a Bibtex summary (button
+# cite all) with the name like pub_bibtex_2020.txt.  Use the following
+# sintax in the inspire literatur search window:
+# a E.Carrera.Jarrin.1 and tc p and date 2019->2020
 ############################################################################
 
 """
@@ -342,63 +350,85 @@ def get_hubi_publication_dictionary():
 #######################################################
 def get_inspire_publication_dictionary(dicOpt):
 #######################################################
+
+    #Not functional as of may 2020
     #get the substrings
-    if (dicOpt['astring']!=""):
-        theAuthor = dicOpt['astring']
-    else:
-        print "No basic author search string, exciting ...."
-        exit(1)
+    #if (dicOpt['astring']!=""):
+    #    theAuthor = dicOpt['astring']
+    #else:
+    #    print "No basic author search string, exciting ...."
+    #    exit(1)
 
     #status string
-    stag = "tc"
-    if (dicOpt['sstring']!= ""):
-        theStatus = "+and+"+stag+"+"+dicOpt['sstring']
-    else:
-        theStatus=dicOpt['sstring']
+    #stag = "tc"
+    #if (dicOpt['sstring']!= ""):
+    #    theStatus = "+and+"+stag+"+"+dicOpt['sstring']
+    #else:
+    #    theStatus=dicOpt['sstring']
 
-    #year tag    
-    ytag = "jy"    
-    if (dicOpt['jyear']!=""):
-        theJyear = "+and+"+ytag+"+"+dicOpt['jyear']
-    else:
-        theJyear = dicOpt['jyear']
+    #year tag
+    #redundant, fixme
+    #if (dicOpt['jyear']!=""):
+    #    theJyear = dicOpt['jyear']
+    #else:
+    #    theJyear = dicOpt['jyear']
 
     #format tag has a default value
-    theFormat = dicOpt['format']
+    #theFormat = dicOpt['format']
 
     #additional string    
-    if (dicOpt['ostring']!=""):   
-        theOstring = "+and+"+dicOpt['ostring']
-    else:
-        theOstring = dicOpt['ostring']
+    #if (dicOpt['ostring']!=""):   
+    #    theOstring = "+and+"+dicOpt['ostring']
+    #else:
+    #    theOstring = dicOpt['ostring']
 
     #harcode the API query tags according to
     #https://inspirehep.net/info/hep/pub_list
-    iPattern = "p"
-    iFormat = "of"
+    #iPattern = "p"
+    #iFormat = "of"
 
     #form the search pattern query
-    iPattern = iPattern+"="+theAuthor+theStatus+theJyear+theOstring
+    #iPattern = iPattern+"="+theAuthor+theStatus+theJyear+theOstring
 
     #form the output format
-    iFormat = iFormat+"="+theFormat
+    #iFormat = iFormat+"="+theFormat
 
-    #form the full search string following
-    #https://inspirehep.net/info/hep/pub_list
     #in order to feed the curl command
-    fString = "curl 'https://inspirehep.net/search?"
-    fString = fString+iPattern+"&"+iFormat+"'"
+    #This is an attempt of may 31, 2020 to extract the bibtex
+    #file automatically but currently no time to deal with selenium
+    #fString = "https://inspirehep.net/literature?sort=mostrecent&size=250&page=1&q=a%20E.Carrera.Jarrin.1%20and%20tc%20"+iPattern+"%20and%20date%20"+theJyear+"%2B"
+    #driver = webdriver.Chrome('/usr/bin/chromedriver')
+    #sleep(5)
+    #citeEl = driver.find_element_by_xpath("//button[@class='ant-btn ant-dropdown-trigger']")
+    #citeEl.click()
+    #thehover = ActionChains(driver).move_to_element(choose)
+    #thehover.perform()
+    #criver.save_screenshot("screenshot.png")
+    
+    #tags = driver.find_elements_by_tag("li")
+    #for tag in tags:
+    #    print (tag.get_attribute("class"))
+    #    print (tag.get_attribute("role"))
+    #    print (tag.get_attribute("text"))
 
-    print fString
 
-    mypipe = subprocess.Popen(fString,shell=True,stdout=subprocess.PIPE)
+    #PROVISIONAL EXTRACTION OF INSPIRE INFO WITH A FILE
+    #CALLED like pub_bibtex_2020.txt OBTAINED MANUALLY
+               
+    theyear = dicOpt['jyear']
+    fbib = "pub_bibtex_"+theyear+".txt"
+    with open(fbib) as bibtex_file:
+        bibtex_str = bibtex_file.read()
+
     #get the list of dictionaries for bibtex entries
-    bib_database = bibtexparser.loads(mypipe.communicate()[0])
+    bib_database = bibtexparser.loads(bibtex_str)
     #form the dictionary like the hubi dictionary
     allPubsDict = {}
     for pub in bib_database.entries:
         theID = pub['doi']
         allPubsDict[theID] = pub
+
+    #print allPubsDict
 
     return allPubsDict
         
@@ -415,6 +445,7 @@ def get_default_options(option):
         dicOpt['jyear']= str(option.jyear)
 
     #for an additional string if needed
+    #not functional as of may 2020 FIXME
     if not option.ostring:
         dicOpt['ostring'] = ""
     else:
@@ -424,14 +455,17 @@ def get_default_options(option):
     #However, it may be configurable in the future.
 
     #basic search string for author
-    dicOpt['astring'] = "FIND+A+EDGAR+CARRERA+OR+A+EDGAR+CARRERA+JARRIN"
+    #Not needed as of may 2020
+    #dicOpt['astring'] = "FIND+A+EDGAR+CARRERA+OR+A+EDGAR+CARRERA+JARRIN"
     
     #basic status string to guaranty published material
-    dicOpt['sstring'] = "p"
+    #not functional as of may 2020
+    #dicOpt['sstring'] = "p"
 
     #for the format.  Needs to be hardcoded because the parsing depends
     #on this.  It was found the bibtex format is the easiest to parse
-    dicOpt['format']= "hx"
+    #Not working as of may 2020
+    #dicOpt['format']= "hx"
 
 
 

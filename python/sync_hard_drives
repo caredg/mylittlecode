@@ -56,7 +56,6 @@ dirs_laptop_hardrive = [
     "Documents",
     "grive",
     "presentations",
-    "publications",
     "teaching"
     ]
 
@@ -66,15 +65,15 @@ dirs_hardrive_backup = [
     "audiobooks",
     "Documents",
     "grive",
+    "incloud_nolaptop_books",
+    "incloud_nolaptop_music",
+    "incloud_nolaptop_old_academic_files",
     "incloud_nolaptop_old_presentations",
     "incloud_nolaptop_old_teaching",
-    "music",
-    "old_academic_files",
     "other_pictures",
     "outreach_ciencia_EdgarCarrera",
     "pictures",
     "presentations",
-    "publications",
     "teaching",
     ]
 
