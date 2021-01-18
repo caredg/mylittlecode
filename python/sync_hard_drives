@@ -4,6 +4,8 @@
 # Author: Edgar Carrera
 # March, 2013
 #
+# 18 Jan 2021: migrated to Python3
+#
 # 13 May 2020: I removed the only Docs option and move the folder to
 # the main area in disks (useful but heavy stuff got moved to a folder that
 # can be uploaded to USFQ cloud).  Plus, I put the HD sizes in usual metrics
@@ -24,7 +26,7 @@ import os,sys
 import subprocess
 import string, re
 import fileinput
-import commands
+#import commands
 import collections
 from time import gmtime, localtime, strftime
 
@@ -132,27 +134,27 @@ def parse(docstring, arglist=None):
 #######################################################
 def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
 #######################################################
-    print "\nHard drive space report:"
+    print( "\nHard drive space report:")
 
     bef = before_sizes
     aft = after_sizes
     
     if drives_mounted[hard_drives[0]]:
-        print "****** "+hard_drives[0]+" ******"
+        print( "****** "+hard_drives[0]+" ******")
         for info in bef[hard_drives[0]]:
             if info == "Use%":
-                print info+":\t"+str(bef[hard_drives[0]][info])+"% --> "+str(aft[hard_drives[0]][info])+"%"
+                print( info+":\t"+str(bef[hard_drives[0]][info])+"% --> "+str(aft[hard_drives[0]][info])+"%")
             else:
-                print info+":\t"+str(bef[hard_drives[0]][info])+" --> "+str(aft[hard_drives[0]][info])
+                print( info+":\t"+str(bef[hard_drives[0]][info])+" --> "+str(aft[hard_drives[0]][info]))
 
 
     if drives_mounted[hard_drives[1]]:
-        print "****** "+hard_drives[1]+" ******"
+        print( "****** "+hard_drives[1]+" ******")
         for info in bef[hard_drives[1]]:
             if info == "Use%":
-                print info+":\t"+str(bef[hard_drives[1]][info])+"% --> "+str(aft[hard_drives[1]][info])+"%"
+                print( info+":\t"+str(bef[hard_drives[1]][info])+"% --> "+str(aft[hard_drives[1]][info])+"%")
             else:
-                print info+":\t"+str(bef[hard_drives[1]][info])+" --> "+str(aft[hard_drives[1]][info])
+                print( info+":\t"+str(bef[hard_drives[1]][info])+" --> "+str(aft[hard_drives[1]][info]))
 
                 
             
@@ -164,9 +166,9 @@ def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
 #######################################################
 #def synch_docs_to_main(isDry):
 #######################################################
-#    print "\nSynching '"+myDocuments+"' folder to the '"+hard_drives[0]+"' main hard drive at the folder '"+momDir_Documents+"'"
-#    do_docs_to_main = "rsync -uv -r "+isDry+" --links --delete "+myDocuments+" "+mymedia+hard_drives[0]+"/"+momDir_Documents+"/."
-#    print do_docs_to_main
+#    print( "\nSynching '"+myDocuments+"' folder to the '"+hard_drives[0]+"' main hard drive at the folder '"+momDir_Documents+"'")
+#    do_docs_to_main = "rsync -uv -r "+isDry+" --links --delete "+myDocuments+" "+mymedia+hard_drives[0]+"/"+momDir_Documents+"/.")
+#    print( do_docs_to_main
 #    os.system(do_docs_to_main)
 
 
@@ -174,37 +176,37 @@ def report_hard_drive_sizes(drives_mounted,before_sizes,after_sizes):
 #######################################################
 def synch_laptop_to_main(isDry):
 #######################################################
-    print "\nSynching folders: "
+    print( "\nSynching folders: ")
     for i in dirs_laptop_hardrive:
-        print i
+        print( i)
 
-    print "at "+myhome+" to the main hard drive '"+hard_drives[0]+"'\n"
+    print( "at "+myhome+" to the main hard drive '"+hard_drives[0]+"'\n")
 
     for carpeta in dirs_laptop_hardrive:
         do_laptop_to_main = "rsync -uv -r "+isDry+" --links --delete "+myhome+carpeta+" "+mymedia+hard_drives[0]+"/."
-        print do_laptop_to_main
+        print( do_laptop_to_main)
         os.system(do_laptop_to_main)
 
 
 #######################################################
 def synch_main_to_backup(isDry):
 #######################################################
-    print "\nSynching folders "
+    print( "\nSynching folders ")
     for j in dirs_hardrive_backup:
-        print j
+        print( j)
 
-    print "at the '"+hard_drives[0]+"' main hard drive to the '"+hard_drives[1]+"' backup hard drive\n"
+    print( "at the '"+hard_drives[0]+"' main hard drive to the '"+hard_drives[1]+"' backup hard drive\n")
 
     for carpeta in dirs_hardrive_backup:
         do_main_to_backup = "rsync -uv -r "+isDry+" --links --delete "+mymedia+hard_drives[0]+"/"+carpeta+" "+mymedia+hard_drives[1]+"/."
-        print do_main_to_backup
+        print( do_main_to_backup)
         os.system(do_main_to_backup)
 
 
 #######################################################
 def synch_hard_drives(dicOpt):
 #######################################################
-    print "\nSynching ..."
+    print( "\nSynching ...")
 
     isDry = dicOpt['dry']
 
@@ -223,14 +225,14 @@ def synch_hard_drives(dicOpt):
 #######################################################
 def get_hard_drive_sizes(drives_mounted, sizes):
 #######################################################
-    print "\nCalculating hard drive sizes ..."
+    print( "\nCalculating hard drive sizes ...")
 
     if drives_mounted[hard_drives[0]]:
         awkIdx = 2
         for info in sizes[hard_drives[0]]:
             str_grep = "df  |grep "+hard_drives[0]+"|awk '{print $"+str(awkIdx)+"}'"
             mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
-            sizes[hard_drives[0]][info] = int(mypipe.communicate()[0].split(" ")[0].split("%")[0])
+            sizes[hard_drives[0]][info] = int(mypipe.communicate()[0].split()[0].decode('ascii').split(" ")[0].split("%")[0])
             awkIdx = awkIdx + 1
             
     
@@ -240,7 +242,7 @@ def get_hard_drive_sizes(drives_mounted, sizes):
         for info in sizes[hard_drives[1]]:
             str_grep = "df  |grep "+hard_drives[1]+"|awk '{print $"+str(awkIdx)+"}'"
             mypipe = subprocess.Popen(str_grep,shell=True,stdout=subprocess.PIPE)
-            sizes[hard_drives[1]][info] = int(mypipe.communicate()[0].split(" ")[0].split("%")[0])
+            sizes[hard_drives[1]][info] = int(mypipe.communicate()[0].split()[0].decode('ascii').split(" ")[0].split("%")[0])
             awkIdx = awkIdx + 1
     
 
@@ -248,7 +250,7 @@ def get_hard_drive_sizes(drives_mounted, sizes):
 #######################################################
 def check_hard_drives(drives_mounted):
 #######################################################
-    print "\nChecking which hard drives are mounted ..."
+    print( "\nChecking which hard drives are mounted ...")
 
     drives_mounted[hard_drives[0]]=os.path.exists(mymedia+hard_drives[0])
     drives_mounted[hard_drives[1]]=os.path.exists(mymedia+hard_drives[1])
@@ -256,52 +258,52 @@ def check_hard_drives(drives_mounted):
     #report what was found and complain if
     #the hard drives mounted are not enough
     if drives_mounted[hard_drives[0]]:
-        print "Main hard drive '"+hard_drives[0]+"' found ..."
+        print( "Main hard drive '"+hard_drives[0]+"' found ...")
     else:
-        print "The main hard drive '"+hard_drives[0]+"' was not found and it is always needed.  Quiting....\n"
+        print( "The main hard drive '"+hard_drives[0]+"' was not found and it is always needed.  Quiting....\n")
         exit()
         
     if drives_mounted[hard_drives[1]]:
-        print "Backup hard drive '"+hard_drives[1]+"' found ..."
+        print( "Backup hard drive '"+hard_drives[1]+"' found ...")
     else:
-        print "WARNING: Backup hard drive '"+hard_drives[1]+"' was not found. Certain operations won't be possible"
+        print( "WARNING: Backup hard drive '"+hard_drives[1]+"' was not found. Certain operations won't be possible")
 
 #######################################################
 def check_options_consistency(dicOpt,drives_mounted):         
 ######################################################
-    print "\nCheckin the consistency of the options chosen ..."
+    print( "\nCheckin the consistency of the options chosen ...")
 
     #check for the all option
     if dicOpt['all']:
-        print "The 'all' option has been chosen (it overrides the rest!)"
+        print( "The 'all' option has been chosen (it overrides the rest!)")
         if not (drives_mounted[hard_drives[0]] and drives_mounted[hard_drives[1]]):
-            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            print( "One of the required hard drives is missing to perform this operation.. \nQuiting...")
             exit()
 
     #check for the doc option
 #    if dicOpt['docs']:
-#        print "The 'docs' option has been chosen"
+#        print( "The 'docs' option has been chosen")
 #        if not (drives_mounted[hard_drives[0]]):
-#            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+#            print( "One of the required hard drives is missing to perform this operation.. \nQuiting...")
 #            exit()
 
     #check for the laptop option
     if dicOpt['laptop']:
-        print "The 'laptop' option has been chosen"
+        print( "The 'laptop' option has been chosen")
         if not (drives_mounted[hard_drives[0]]):
-            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            print( "One of the required hard drives is missing to perform this operation.. \nQuiting...")
             exit()
 
     #check for the backup option
     if dicOpt['backup']:
-        print "The 'backup' option has been chosen"
+        print( "The 'backup' option has been chosen")
         if not (drives_mounted[hard_drives[0]] and drives_mounted[hard_drives[1]]):
-            print "One of the required hard drives is missing to perform this operation.. \nQuiting..."
+            print( "One of the required hard drives is missing to perform this operation.. \nQuiting...")
             exit()
 
     #make a comment about the dry run
     if dicOpt['dry'] == "-n":
-        print "The 'dry' option has been chosen"
+        print( "The 'dry' option has been chosen")
 
     
 #######################################################
@@ -370,13 +372,13 @@ if __name__ =='__main__':
         exit()
 
 
-    #print args[1]
+    #print( args[1])
 
     #set default options
     dicOpt = get_default_options(option)
     if (printConfig):
         for k in dicOpt:
-            print str(k)+" = "+str(dicOpt[k])
+            print( str(k)+" = "+str(dicOpt[k]))
 
 
             
